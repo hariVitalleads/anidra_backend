@@ -1,0 +1,16 @@
+version: '3.3'
+services:
+  db:
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_DATABASE: 'anidra'
+      MYSQL_ROOT_PASSWORD: 'anidra'
+    ports:
+      - '3306:3306'
+    volumes:
+      - anidra-db:/var/lib/mysql
+      - ./anidra-db/init.sql:/docker-entrypoint-initdb.d/init.sql
+# Names our volume
+volumes:
+  anidra-db:
