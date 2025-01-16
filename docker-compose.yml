@@ -1,16 +1,30 @@
-version: '3.3'
+version: '3'
 services:
-  db:
+  mysql:
     image: mysql:8.0
-    restart: always
     environment:
-      MYSQL_DATABASE: 'anidra'
-      MYSQL_ROOT_PASSWORD: 'anidra'
+      MYSQL_ROOT_PASSWORD: anidra
+      MYSQL_DATABASE: anidra
+      MYSQL_USER: anidra
+      MYSQL_PASSWORD: anidra
     ports:
-      - '3306:3306'
+      - "3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  flyway:
+    image: flyway/flyway:11-alpine
     volumes:
-      - anidra-db:/var/lib/mysql
-      - ./anidra-db/init.sql:/docker-entrypoint-initdb.d/init.sql
-# Names our volume
-volumes:
-  anidra-db:
+      - ./sql_versions:/flyway/sql
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      - FLYWAY_URL=jdbc:mysql://mysql:3306/anidra?allowPublicKeyRetrieval=true&useSSL=false
+      - FLYWAY_USER=anidra
+      - FLYWAY_PASSWORD=anidra
+      - FLYWAY_VALIDATE_MIGRATION_NAMING=true
+    command: baseline migrate
+    #command: -url=jdbc:mysql://mysql:3306/anidra -schemas=anidra -user=root -password=anidra migrate
